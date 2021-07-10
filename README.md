@@ -17,11 +17,11 @@
 
 ## 使用介绍
 
-介绍本地测试的使用, 使用IDEA + TOMCAT 运行测试:
+介绍本地测试的使用, 使用IDEA 和 外置Tomcat 运行测试:
 
-1. 配置proxy tomcat, 使用端口8081, 配置-Dserver.mode=proxy
+1. 配置proxy tomcat, 使用端口8081, 配置启动参数 -Dserver.mode=proxy
 
-2. 配置router tomcat, 使用端口8080, 配置-Dserver.mode=router
+2. 配置router tomcat, 使用端口8080, 配置启动参数 -Dserver.mode=router
 
 3. 测试获取代理端口: http://127.0.0.1:8080/route/bind/127.0.0.1/8080
 
