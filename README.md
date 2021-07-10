@@ -8,6 +8,8 @@ Client (Request to connect ip1:port1)  =>  RouterServer(router.server) => ProxyS
 Client connect router.server:xxx       <=> bind router.server:xxx to connect <=> ProxyServer (...) <=> ip1:port1         
 ```
 
+![oh-router](https://github.com/ZzzCrazyPig/oh-router/blob/master/doc/img/oh-router.png)
+
 ## 使用介绍
 
 介绍本地测试的使用, 使用IDEA + TOMCAT 运行测试:
