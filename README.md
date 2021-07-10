@@ -1,6 +1,6 @@
 ## oh-router
 
-基于netty实现的代理转发:
+基于 Netty 实现的代理地址转发服务，核心流程逻辑的时序图参考如下：
 
 ![oh-router](https://github.com/ZzzCrazyPig/oh-router/blob/master/doc/img/oh-router.svg)
 
