@@ -16,7 +16,7 @@ Client connect router.server:xxx       <=> bind router.server:xxx to connect <=>
 
 2. 配置router tomcat, 使用端口8080, 配置-Dserver.mode=router
 
-3. 测试获取代理端口: http://{yourhost}:8080/route/bind/127.0.0.1/8080
+3. 测试获取代理端口: http://127.0.0.1:8080/route/bind/127.0.0.1/8080
 
 4. 上述接口返回映射的ip port后即可通过此地址代理访问127.0.0.1的8080端口服务
 
