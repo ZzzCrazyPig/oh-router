@@ -21,7 +21,9 @@ import java.util.function.Supplier;
 
 /**
  * Created by chenjianxin on 2021/6/26.
- * Proxy负责跟真正的目标连接打交道, 需要部署在能够连接目标的网络域中
+ *
+ * ProxyServer is responsible for dealing with the real target connection
+ * and needs to be deployed in a network domain that can connect to the target
  */
 @Slf4j
 public class ProxyServer implements InitializingBean {
@@ -37,7 +39,7 @@ public class ProxyServer implements InitializingBean {
     private EventLoopGroup workerGroup;
 
     /**
-     * proxy server的监听端口
+     * proxy server listening port
      */
     @Setter
     private int port;
@@ -49,11 +51,15 @@ public class ProxyServer implements InitializingBean {
 
     public void start() throws Exception {
 
-        // 初始化server
-        bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("ProxyBoss"));
-        workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors(), new DefaultThreadFactory("ProxyWorker"));
+        // init proxy server
+        bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("ProxyAcceptor"));
+        workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors(), new DefaultThreadFactory("ProxyIOWorker"));
         server.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
+                .option(ChannelOption.SO_BACKLOG, 1024)
+                .option(ChannelOption.SO_REUSEADDR, true)
+                .childOption(ChannelOption.TCP_NODELAY, true)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childHandler(new ProxyFrontendChannelInitializer(this)).bind(port).sync();
 
         log.info("ProxyServer started at {} and bind on {}", HostUtils.serverHost(), this.port);
@@ -63,6 +69,8 @@ public class ProxyServer implements InitializingBean {
         Bootstrap client = clientProvider.get();
         client.group(frontendChannel.eventLoop())
                 .channel(NioSocketChannel.class)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(new ProxyBackendChannelInitializer());
         return client.connect(host, port);
     }

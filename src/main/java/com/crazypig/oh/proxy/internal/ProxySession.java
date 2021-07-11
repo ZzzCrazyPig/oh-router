@@ -26,16 +26,11 @@ public class ProxySession extends ChannelSession implements ProxySessionHandler 
 
     @Override
     public void onEstablished() {
-
         Channel frontendChannel = frontend();
-
-        // 移除编解码的处理
         ProxyFrontendChannelInitializer.unCodec(frontendChannel);
-        // 代理数据传输处理, 前端channel读到的数据直接write到后端channel
         this.state = ProxySessionState.ESTABLISHED;
-
         Channel backendChannel = backend();
-
+        // enable backend channel to read
         backendChannel.config().setAutoRead(true);
     }
 
@@ -68,13 +63,12 @@ public class ProxySession extends ChannelSession implements ProxySessionHandler 
     private void handleBackendRead(Object msg) {
         log.debug("session [{}] backend channel [{}] receive data : \n {}", id(), backend().id(),
                 ByteBufUtil.prettyHexDump((ByteBuf) msg));
-        // 读到什么, 就往前端channel发送
         Channel frontendChannel = frontend();
         frontendChannel.writeAndFlush(msg);
     }
 
     @Override
-    public boolean establish() {
+    public boolean established() {
         return state == ProxySessionState.ESTABLISHED;
     }
 

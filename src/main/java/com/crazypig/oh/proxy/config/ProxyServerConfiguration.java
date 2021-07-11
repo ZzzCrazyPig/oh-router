@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class ProxyServerConfiguration {
 
     /**
-     * proxy server的监听端口
+     * proxy server listening port
      */
     @Value("${proxy.port:9000}")
     private int port;

@@ -34,9 +34,7 @@ public class ProxyFrontendChannelInitializer extends ChannelInitializer {
 
     @Override
     protected void initChannel(Channel channel) throws Exception {
-        // 初始化应该接受命令消息(与Router约定好的自定义消息格式), 添加对应的编解码器
         codec(channel);
-        // 核心业务逻辑处理器
         channel.pipeline().addLast("proxyFrontendHandler", new ProxyFrontendHandler(this.proxyServer));
     }
 

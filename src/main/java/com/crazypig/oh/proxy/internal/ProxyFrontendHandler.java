@@ -1,23 +1,19 @@
 package com.crazypig.oh.proxy.internal;
 
-import com.alibaba.fastjson.JSON;
 import com.crazypig.oh.common.protocol.Address;
 import com.crazypig.oh.common.protocol.Command;
 import com.crazypig.oh.common.protocol.ConnectCommand;
 import com.crazypig.oh.common.protocol.ConnectResponse;
 import com.crazypig.oh.proxy.ProxyServer;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by chenjianxin on 2021/6/26.
- * 代理服务前端链路的处理
+ *
  */
 @Slf4j
 public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
@@ -49,9 +45,8 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
-        // 已连接上, 读到的数据原样发送到后端channel
         ProxySession session = sessionOf(ctx.channel(), false);
-        if (session != null && session.establish()) {
+        if (session != null && session.established()) {
             session.handleRead(ctx, msg);
             return;
         }
@@ -61,7 +56,6 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
         Command command = Command.parse(message);
         switch (command.getType()) {
             case CONNECT:
-                // 连接目标
                 handleConnect(ctx, message);
                 break;
             case ACK:
@@ -69,7 +63,6 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
                 break;
             default:
                 log.error(LOG_PREFIX + " Unknown command type : {}", command.getType());
-                // 非法命令, 关闭链路
                 closeChannel(ctx.channel());
                 break;
         }
@@ -89,14 +82,14 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
         connectFuture.addListener(future -> {
 
             if (!future.isSuccess()) {
-                // 连接失败的处理
+                // fail to connect proxy
                 ConnectResponse failResponse = new ConnectResponse();
                 failResponse.fail(future.cause().getMessage());
                 failResponse.resp(ctx.channel());
                 return;
             }
 
-            // 链接目标端成功, 创建会话
+            // connect successfully, create proxy session
             Channel backendChannel = connectFuture.channel();
             Channel frontendChannel = ctx.channel();
 
@@ -104,7 +97,7 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
             backendChannel.attr(ProxyServer.SESSION_KEY).set(session);
             frontendChannel.attr(ProxyServer.SESSION_KEY).set(session);
 
-            // 链接建立成功, 写响应消息
+            // response to RouteServer
             ConnectResponse connectResponse = new ConnectResponse();
             connectResponse.success(session.id());
             ChannelFuture respFuture = connectResponse.resp(frontendChannel);

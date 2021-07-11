@@ -11,6 +11,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -40,29 +41,19 @@ public class NettyRouteService implements RouteService, InitializingBean, Dispos
 
     private static final int MIN_PORT = 20000;
 
+    private static Supplier<ServerBootstrap> serverProvider = ServerBootstrap::new;
+
     private static Supplier<Bootstrap> clientProvider = Bootstrap::new;
 
     private Map<RouteInfo, ServerBinder> serverBinderMap = new ConcurrentHashMap<>();
 
-    /**
-     * 负责server bind 的event loop
-     */
     private EventLoopGroup acceptorGroup;
 
-    /**
-     * 负责 io 的 event loop
-     */
     private EventLoopGroup ioWorkerGroup;
 
-    /**
-     * server bind group event loop 线程数
-     */
     @Setter
     private int acceptorSize = 1;
 
-    /**
-     * channel io 线程数
-     */
     @Setter
     private int ioWorkerSize = Runtime.getRuntime().availableProcessors();
 
@@ -107,21 +98,20 @@ public class NettyRouteService implements RouteService, InitializingBean, Dispos
         EventLoopGroup clientGroup = frontendChannel instanceof EmbeddedChannel ? ioWorkerGroup : frontendChannel.eventLoop();
         client.group(clientGroup)
                 .channel(NioSocketChannel.class)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.TCP_NODELAY, true)
                 .handler(RouteBackendChannelInitializer.INSTANCE);
 
-        // 连接proxy server
+        // connect proxy server
         ChannelFuture channelFuture = client.connect(proxyHost, proxyPort);
 
         channelFuture.addListener(f -> {
 
             Channel backendChannel = channelFuture.channel();
             RouteSession session = new RouteSession(routeInfo, routePromise, frontendChannel, backendChannel);
-            // 前端channel绑定后端channel
             frontendChannel.attr(RouteServer.SESSION).set(session);
-            // 后端channel绑定前端channel
             backendChannel.attr(RouteServer.SESSION).set(session);
 
-            // 异常处理
             if (!f.isSuccess()) {
                 session.onRouteFail(f.cause());
                 return;
@@ -147,7 +137,7 @@ public class NettyRouteService implements RouteService, InitializingBean, Dispos
         try {
             session = routePromise.get(timeoutInSeconds, TimeUnit.SECONDS);
             log.info("Routing {} successfully", routeInfo);
-            // 连接成功, 绑定server port
+            // route successfully, bind server port
             return this.doBind(routeInfo);
         }
         catch (ExecutionException e) {
@@ -182,21 +172,24 @@ public class NettyRouteService implements RouteService, InitializingBean, Dispos
 
         ServerBinder serverBinder = serverBinderMap.get(routeInfo);
         if (serverBinder != null && serverBinder.available()) {
-            // 已经有对应的bind server, 直接复用
+            // reuse bind address when exists
             bindAddress = serverBinder.getBindAddress();
             log.info("Already exist doBind address {} for routing {}", bindAddress, routeInfo);
             return bindAddress;
         }
 
-        // 没有bind server, 需要新建bind
         int bindPort = nextIdlePort();
         bindAddress = new Address(HostUtils.serverHost(), bindPort);
         serverBinder = new ServerBinder(bindAddress);
 
-        ServerBootstrap serverBootstrap = new ServerBootstrap();
+        ServerBootstrap serverBootstrap = serverProvider.get();
         ChannelFuture channelFuture = serverBootstrap
                 .group(acceptorGroup, ioWorkerGroup)
                 .channel(NioServerSocketChannel.class)
+                .option(ChannelOption.SO_BACKLOG, 200)
+                .option(ChannelOption.SO_REUSEADDR, true)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.TCP_NODELAY, true)
                 .childHandler(new RouteFrontendChannelInitializer(routeInfo, serverBinder))
                 .bind(bindAddress.getHost(), bindAddress.getPort())
                 .sync();

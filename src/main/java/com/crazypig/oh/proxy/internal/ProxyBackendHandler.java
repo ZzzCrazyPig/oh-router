@@ -14,7 +14,6 @@ import java.util.Objects;
 /**
  * Created by chenjianxin on 2021/6/26.
  *
- * 负责真正与目标端通讯的处理器
  */
 @Slf4j
 public class ProxyBackendHandler extends ChannelInboundHandlerAdapter {
@@ -48,7 +47,6 @@ public class ProxyBackendHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         log.error(LOG_PREFIX + " channel [" + ctx.channel().id() + "] error", cause);
-        // 遇到异常, 关闭链路
         ProxySession session = sessionOf(ctx.channel(), false);
         if (session != null) {
             session.close();

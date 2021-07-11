@@ -2,38 +2,38 @@ package com.crazypig.oh.common.session;
 
 /**
  * Created by chenjianxin on 2021/6/29.
- * 链路会话
+ *
  */
 public interface Session<T> {
 
     /**
-     * 会话ID
+     * session ID
      * @return
      */
     String id();
 
     /**
-     * 前端
+     * session frontend
      * @return
      */
     T frontend();
 
     /**
-     * 后端
+     * session backend
      * @return
      */
     T backend();
 
 
     /**
-     * 链路会话是否已经建立
+     * session is established or not
      * @return
      */
-    boolean establish();
+    boolean established();
 
 
     /**
-     * 会话关闭
+     * close session
      */
     void close();
 
