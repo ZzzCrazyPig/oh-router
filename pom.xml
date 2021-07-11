@@ -42,7 +42,6 @@
             <version>${commons-lang3.version}</version>
         </dependency>
 
-        <!-- 使用外置容器部署, 如需要内置容器则去掉exclusions部分 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
