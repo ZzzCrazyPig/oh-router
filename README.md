@@ -1,6 +1,6 @@
 ## oh-router
 
-Port mapping proxy based on Netty. The sequence diagram of the core process logic is as follows:
+Port mapping proxy based on [Netty](https://github.com/netty/netty). The sequence diagram of the core process logic is as follows:
 
 ![oh-router](https://github.com/ZzzCrazyPig/oh-router/blob/master/doc/img/oh-router.svg)
 
