@@ -4,6 +4,8 @@ import com.crazypig.oh.common.session.ChannelSession;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,9 +31,12 @@ public class ProxySession extends ChannelSession implements ProxySessionHandler 
         Channel frontendChannel = frontend();
         ProxyFrontendChannelInitializer.unCodec(frontendChannel);
         this.state = ProxySessionState.ESTABLISHED;
+
+        // Tips: backendChannel had already setAutoRead(false) when channelActive
+        frontendChannel.config().setAutoRead(false);
         Channel backendChannel = backend();
-        // enable backend channel to read
-        backendChannel.config().setAutoRead(true);
+        backendChannel.read();
+        frontendChannel.read();
     }
 
     @Override
@@ -57,14 +62,32 @@ public class ProxySession extends ChannelSession implements ProxySessionHandler 
         log.debug("session [{}] frontend channel [{}] receive data : \n {}", id(), frontend().id(),
                 ByteBufUtil.prettyHexDump((ByteBuf) msg));
         Channel backendChannel = backend();
-        backendChannel.writeAndFlush(msg);
+        backendChannel.writeAndFlush(msg).addListener((ChannelFutureListener) f -> {
+
+            if (f.isSuccess()) {
+                frontend().read();
+            }
+            else {
+                f.channel().close();
+            }
+
+        });
     }
 
     private void handleBackendRead(Object msg) {
         log.debug("session [{}] backend channel [{}] receive data : \n {}", id(), backend().id(),
                 ByteBufUtil.prettyHexDump((ByteBuf) msg));
         Channel frontendChannel = frontend();
-        frontendChannel.writeAndFlush(msg);
+        frontendChannel.writeAndFlush(msg).addListener((ChannelFutureListener) f -> {
+
+            if (f.isSuccess()) {
+                backend().read();
+            }
+            else {
+                f.channel().close();
+            }
+
+        });
     }
 
     @Override

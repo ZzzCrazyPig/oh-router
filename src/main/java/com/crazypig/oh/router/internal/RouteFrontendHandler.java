@@ -61,9 +61,6 @@ public class RouteFrontendHandler extends ChannelInboundHandlerAdapter {
                     frontendChannel.id(),
                     backendChannel.id(),
                     session.id());
-            // enable auto read when route channel is established
-            frontendChannel.config().setAutoRead(true);
-
         });
     }
 

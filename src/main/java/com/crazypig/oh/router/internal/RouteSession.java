@@ -8,6 +8,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +79,16 @@ public class RouteSession extends ChannelSession implements RouteSessionHandler 
         Channel backendChannel = backend();
         log.debug("session [{}] frontend channel [{}] receive data : \n {}",
                 id(), backendChannel.id(), ByteBufUtil.prettyHexDump((ByteBuf) msg));
-        backendChannel.writeAndFlush(msg);
+        backendChannel.writeAndFlush(msg).addListener((ChannelFutureListener) f -> {
+
+            if (f.isSuccess()) {
+                frontend().read();
+            }
+            else {
+                f.channel().close();
+            }
+
+        });
     }
 
     private void handleBackendRead(Object msg) {
@@ -92,7 +102,16 @@ public class RouteSession extends ChannelSession implements RouteSessionHandler 
                     ByteBufUtil.prettyHexDump((ByteBuf) msg));
 
             Channel frontendChannel = frontend();
-            frontendChannel.writeAndFlush(msg);
+            frontendChannel.writeAndFlush(msg).addListener((ChannelFutureListener) f -> {
+
+                if (f.isSuccess()) {
+                    backendChannel.read();
+                }
+                else {
+                    f.channel().close();
+                }
+
+            });
             return;
         }
 
@@ -141,6 +160,12 @@ public class RouteSession extends ChannelSession implements RouteSessionHandler 
         this.state = RouteSessionState.ESTABLISHED;
 
         routePromise.setSuccess(this);
+
+        // Tips: frontend channel had already setAutoRead(false) when channelActive
+        backendChannel.config().setAutoRead(false);
+
+        frontend().read();
+        backendChannel.read();
     }
 
     @Override
