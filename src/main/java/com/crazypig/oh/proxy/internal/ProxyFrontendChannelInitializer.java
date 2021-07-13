@@ -1,5 +1,6 @@
 package com.crazypig.oh.proxy.internal;
 
+import com.crazypig.oh.common.protocol.Command;
 import com.crazypig.oh.proxy.ProxyServer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -18,10 +19,10 @@ import java.util.function.Supplier;
 public class ProxyFrontendChannelInitializer extends ChannelInitializer {
 
     private static final Pair<String, Supplier<ChannelHandler>> LEN_FIELD_ENCODER =
-            Pair.of("lengthFieldEncoder", () -> new LengthFieldPrepender(4));
+            Pair.of("lengthFieldEncoder", () -> new LengthFieldPrepender(3));
 
     private static final Pair<String, Supplier<ChannelHandler>> LEN_FIELD_DECODER =
-            Pair.of("lengthFieldDecoder", () -> new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
+            Pair.of("lengthFieldDecoder", () -> new LengthFieldBasedFrameDecoder(Command.MAX_FRAME_LENGTH, 0, 3, 0, 3));
 
     private static final Pair<String, Supplier<ChannelHandler>> STRING_DECODER =
             Pair.of("stringDecoder", () -> new StringDecoder(CharsetUtil.UTF_8));

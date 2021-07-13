@@ -1,5 +1,6 @@
 package com.crazypig.oh.router.internal;
 
+import com.crazypig.oh.common.protocol.Response;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
@@ -20,10 +21,10 @@ public class RouteBackendChannelInitializer extends ChannelInitializer {
     public static final RouteBackendChannelInitializer INSTANCE = new RouteBackendChannelInitializer();
 
     private static final Pair<String, Supplier<ChannelHandler>> COM_ENCODER =
-            Pair.of("commandEncoder", () -> new LengthFieldPrepender(4));
+            Pair.of("commandEncoder", () -> new LengthFieldPrepender(3));
 
     private static final Pair<String, Supplier<ChannelHandler>> RESP_DECODER =
-            Pair.of("responseDecoder", () -> new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
+            Pair.of("responseDecoder", () -> new LengthFieldBasedFrameDecoder(Response.MAX_FRAME_LENGTH, 0, 3, 0, 3));
 
     private static final Pair<String, Supplier<ChannelHandler>> STRING_DECODER =
             Pair.of("stringDecoder", () -> new StringDecoder(CharsetUtil.UTF_8));

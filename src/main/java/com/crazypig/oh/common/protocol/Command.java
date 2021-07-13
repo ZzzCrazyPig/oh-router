@@ -15,6 +15,8 @@ import java.io.Serializable;
 @Data
 public class Command<T> implements Serializable {
 
+    public static int MAX_FRAME_LENGTH = 1024 * 1024;
+
     protected String sessionId;
 
     protected CommandType type;

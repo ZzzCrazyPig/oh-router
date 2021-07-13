@@ -13,6 +13,8 @@ import lombok.Data;
 @Data
 public class Response<T> {
 
+    public static int MAX_FRAME_LENGTH = 1024 * 1024;
+
     private CommandType cmdType;
 
     private boolean success;
