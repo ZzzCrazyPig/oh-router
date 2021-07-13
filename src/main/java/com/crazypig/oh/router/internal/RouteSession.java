@@ -84,9 +84,6 @@ public class RouteSession extends ChannelSession implements RouteSessionHandler 
             if (f.isSuccess()) {
                 frontend().read();
             }
-            else {
-                f.channel().close();
-            }
 
         });
     }
@@ -106,9 +103,6 @@ public class RouteSession extends ChannelSession implements RouteSessionHandler 
 
                 if (f.isSuccess()) {
                     backendChannel.read();
-                }
-                else {
-                    f.channel().close();
                 }
 
             });

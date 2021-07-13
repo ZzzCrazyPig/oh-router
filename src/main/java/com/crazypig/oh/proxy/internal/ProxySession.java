@@ -67,9 +67,6 @@ public class ProxySession extends ChannelSession implements ProxySessionHandler 
             if (f.isSuccess()) {
                 frontend().read();
             }
-            else {
-                f.channel().close();
-            }
 
         });
     }
@@ -82,9 +79,6 @@ public class ProxySession extends ChannelSession implements ProxySessionHandler 
 
             if (f.isSuccess()) {
                 backend().read();
-            }
-            else {
-                f.channel().close();
             }
 
         });
