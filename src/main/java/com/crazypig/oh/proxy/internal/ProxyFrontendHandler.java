@@ -4,11 +4,9 @@ import com.crazypig.oh.common.protocol.Address;
 import com.crazypig.oh.common.protocol.Command;
 import com.crazypig.oh.common.protocol.ConnectCommand;
 import com.crazypig.oh.common.protocol.ConnectResponse;
+import com.crazypig.oh.common.util.ChannelUtils;
 import com.crazypig.oh.proxy.ProxyServer;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,7 +36,7 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
         if (session != null) {
             session.close();
         } else {
-            closeChannel(ctx.channel());
+            ChannelUtils.close(ctx.channel());
         }
     }
 
@@ -63,7 +61,7 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
                 break;
             default:
                 log.error(LOG_PREFIX + " Unknown command type : {}", command.getType());
-                closeChannel(ctx.channel());
+                ChannelUtils.close(ctx.channel());
                 break;
         }
 
@@ -79,7 +77,7 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
                 target.getHost(),
                 target.getPort());
 
-        connectFuture.addListener(future -> {
+        connectFuture.addListener((ChannelFutureListener) future -> {
 
             if (!future.isSuccess()) {
                 // fail to connect proxy
@@ -90,7 +88,7 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
             }
 
             // connect successfully, create proxy session
-            Channel backendChannel = connectFuture.channel();
+            Channel backendChannel = future.channel();
             Channel frontendChannel = ctx.channel();
 
             ProxySession session = new ProxySession(connectCommand.getSessionId(), frontendChannel, backendChannel);
@@ -122,7 +120,7 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
             session.close();
         }
         else {
-            closeChannel(ctx.channel());
+            ChannelUtils.close(ctx.channel());
         }
     }
 
@@ -132,15 +130,6 @@ public class ProxyFrontendHandler extends ChannelInboundHandlerAdapter {
             throw new IllegalStateException("Session leak of channel [" + channel.id() + "]");
         }
         return session;
-    }
-
-    private void closeChannel(Channel channel) {
-        if (channel == null) {
-            return;
-        }
-        if (channel.isOpen()) {
-            channel.close();
-        }
     }
 
 }

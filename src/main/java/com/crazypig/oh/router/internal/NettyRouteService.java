@@ -9,10 +9,7 @@ import com.crazypig.oh.router.RouteServer;
 import com.crazypig.oh.router.model.ServerBindStatView;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -105,9 +102,9 @@ public class NettyRouteService implements RouteService, InitializingBean, Dispos
         // connect proxy server
         ChannelFuture channelFuture = client.connect(proxyHost, proxyPort);
 
-        channelFuture.addListener(f -> {
+        channelFuture.addListener((ChannelFutureListener) f -> {
 
-            Channel backendChannel = channelFuture.channel();
+            Channel backendChannel = f.channel();
             RouteSession session = new RouteSession(routeInfo, routePromise, frontendChannel, backendChannel);
             frontendChannel.attr(RouteServer.SESSION).set(session);
             backendChannel.attr(RouteServer.SESSION).set(session);

@@ -1,6 +1,7 @@
 package com.crazypig.oh.router.internal;
 
 import com.crazypig.oh.common.session.Session;
+import com.crazypig.oh.common.util.ChannelUtils;
 import com.crazypig.oh.router.exception.RouteException;
 import com.crazypig.oh.router.RouteServer;
 import io.netty.channel.Channel;
@@ -33,7 +34,7 @@ public class RouteBackendHandler extends ChannelInboundHandlerAdapter {
             session.close();
         }
         else {
-            closeChannel(backendChannel);
+            ChannelUtils.close(backendChannel);
         }
     }
 
@@ -53,7 +54,7 @@ public class RouteBackendHandler extends ChannelInboundHandlerAdapter {
             session.close();
         }
         else {
-            closeChannel(backendChannel);
+            ChannelUtils.close(backendChannel);
         }
     }
 
@@ -63,15 +64,6 @@ public class RouteBackendHandler extends ChannelInboundHandlerAdapter {
             throw new RouteException("Session leak of channel [" + backendChannel.id() + "]");
         }
         return session;
-    }
-
-    private void closeChannel(Channel channel) {
-        if (channel == null) {
-            return;
-        }
-        if (channel.isOpen()) {
-            channel.close();
-        }
     }
 
 }

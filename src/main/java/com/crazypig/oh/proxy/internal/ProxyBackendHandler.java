@@ -1,15 +1,11 @@
 package com.crazypig.oh.proxy.internal;
 
+import com.crazypig.oh.common.util.ChannelUtils;
 import com.crazypig.oh.proxy.ProxyServer;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.Attribute;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Objects;
 
 /**
  * Created by chenjianxin on 2021/6/26.
@@ -34,7 +30,7 @@ public class ProxyBackendHandler extends ChannelInboundHandlerAdapter {
             session.close();
         }
         else {
-            closeChannel(ctx.channel());
+            ChannelUtils.close(ctx.channel());
         }
     }
 
@@ -52,7 +48,7 @@ public class ProxyBackendHandler extends ChannelInboundHandlerAdapter {
             session.close();
         }
         else {
-            closeChannel(ctx.channel());
+            ChannelUtils.close(ctx.channel());
         }
     }
 
@@ -62,15 +58,6 @@ public class ProxyBackendHandler extends ChannelInboundHandlerAdapter {
             throw new IllegalStateException("Session leak of channel [" + channel.id() + "]");
         }
         return session;
-    }
-
-    private void closeChannel(Channel channel) {
-        if (channel == null) {
-            return;
-        }
-        if (channel.isOpen()) {
-            channel.close();
-        }
     }
 
 }

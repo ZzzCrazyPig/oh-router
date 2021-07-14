@@ -1,6 +1,7 @@
 package com.crazypig.oh.router.internal;
 
 import com.crazypig.oh.common.protocol.RouteInfo;
+import com.crazypig.oh.common.util.ChannelUtils;
 import com.crazypig.oh.router.exception.RouteException;
 import com.crazypig.oh.router.RouteServer;
 import io.netty.channel.Channel;
@@ -51,7 +52,7 @@ public class RouteFrontendHandler extends ChannelInboundHandlerAdapter {
 
             if (!f.isSuccess()) {
                 log.error("Can not route to " + routeInfo + " of channel [" + frontendChannel.id() + "]", f.cause());
-                closeChannel(frontendChannel);
+                ChannelUtils.close(frontendChannel);
                 return;
             }
 
@@ -73,7 +74,7 @@ public class RouteFrontendHandler extends ChannelInboundHandlerAdapter {
             session.close();
         }
         else {
-            closeChannel(frontendChannel);
+            ChannelUtils.close(frontendChannel);
         }
     }
 
@@ -93,7 +94,7 @@ public class RouteFrontendHandler extends ChannelInboundHandlerAdapter {
             session.close();
         }
         else {
-            closeChannel(frontendChannel);
+            ChannelUtils.close(frontendChannel);
         }
     }
 
@@ -103,15 +104,6 @@ public class RouteFrontendHandler extends ChannelInboundHandlerAdapter {
             throw new RouteException("Session leak of channel [" + frontendChannel.id() + "]");
         }
         return session;
-    }
-
-    private void closeChannel(Channel channel) {
-        if (channel == null) {
-            return;
-        }
-        if (channel.isOpen()) {
-            channel.close();
-        }
     }
 
 }

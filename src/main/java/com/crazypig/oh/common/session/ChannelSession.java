@@ -1,5 +1,6 @@
 package com.crazypig.oh.common.session;
 
+import com.crazypig.oh.common.util.ChannelUtils;
 import io.netty.channel.Channel;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,8 +45,8 @@ public abstract class ChannelSession implements Session<Channel> {
         if (!closed.compareAndSet(false, true)) {
             return;
         }
-        closeChannel(this.backendChannel);
-        closeChannel(this.frontendChannel);
+        ChannelUtils.close(this.backendChannel);
+        ChannelUtils.close(this.frontendChannel);
     }
 
     @Override
@@ -58,15 +59,6 @@ public abstract class ChannelSession implements Session<Channel> {
                 .append(this.backend().id())
                 .append(" )");
         return builder.toString();
-    }
-
-    protected void closeChannel(Channel channel) {
-        if (channel == null) {
-            return;
-        }
-        if (channel.isOpen()) {
-            channel.close();
-        }
     }
 
 }
