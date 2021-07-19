@@ -57,6 +57,11 @@ public class ServerBinder extends DefaultChannelGroup {
         if (!closed.compareAndSet(false, true)) {
             return;
         }
+        // check idle again
+        if (!idle.get()) {
+            closed.set(false);
+            return;
+        }
         try {
             this.serverChannel.close();
             log.info("AutoClose idle server binder of bindAddress : " + bindAddress);
